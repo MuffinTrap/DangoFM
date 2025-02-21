@@ -3,6 +3,8 @@
 #include <SDL_stdinc.h>
 #include "synth_definitions.h"
 
+real* DangoFM::Operator::SinTable;
+
 static real generate_sin(real wavePeriod);
 static real generate_square(real wavePeriod);
 static real generate_saw(real wavePeriod);
@@ -74,15 +76,14 @@ DangoFM::Operator::Operator(DangoFM::Waveform wave, real power, int16 tuningSemi
 }
 
 
-real DangoFM::Operator::NoteToHz(uint8 note)
+real DangoFM::Operator::NoteToHz(int note)
 {
   /* Input note: 0-127
  * Output: C0 - C9
  */
 
-  int adjusted = note + ModulatorFreqMultiplierToSemitones();
   // TODO adjust by tuning
-  real pitch_in_hz = 440.0f * SDL_pow(2.0f, ( float(adjusted) - 45.0f ) / 12.0f);
+  real pitch_in_hz = 440.0f * SDL_pow(2.0f, ( float(note) - 45.0f ) / 12.0f);
   return pitch_in_hz;
 }
 
@@ -94,7 +95,14 @@ DangoFM::Envelope & DangoFM::Operator::GetVolumeEnvelope()
 
 void DangoFM::Operator::TuneToNote(uint8 note)
 {
-  frequenzyHz = NoteToHz(note);
+  int adjusted = note + ModulatorFreqMultiplierToSemitones();
+  frequenzyHz = NoteToHz(adjusted);
+  // Calculate offset from C0
+  float offsetOctaves = (float)note/12.0f;
+
+  // This must always be positive
+  volumeEnvelope.advanceSpeed = 1.0f + offsetOctaves * volumeEnvelope.advanceSpeedOffset;
+
   phaseIncrement = Freq2Rad * frequenzyHz;
 }
 
@@ -165,19 +173,29 @@ std::function<real (real)> DangoFM::Operator::GetWaveFunction()
 
 real DangoFM::Operator::PC_Sin(real wavePeriod)
 {
-  size_t i = (size_t)SDL_floorf(wavePeriod/TAU);
+  const real waveTau = (wavePeriod/TAU);
+  const size_t i = (size_t)SDL_floorf( (waveTau)*SineResolution );
+  const real sinvalue = SinTable[i];
+  /*
+  if (sinvalue < -1.0f || sinvalue > 1.0f)
+  {
+    printf("Clipping Sin sample: %zu: %f from wave %f\n", i, sinvalue, wavePeriod);
+  }
+  */
   return SinTable[i];
 }
 
+#define SIN_FUNC DangoFM::Operator::PC_Sin
+
 real generate_sin(real wavePeriod)
 {
-  return SDL_sin(wavePeriod);
+  return SIN_FUNC(wavePeriod);
 }
 
 // TODO: Compiler define to use Fourier versions
 real generate_triangle(real wavePeriod)
 {
-  return SDL_asin(SDL_sin(wavePeriod)) * (2.0 / M_PI);
+  return SDL_asin(SIN_FUNC(wavePeriod)) * (2.0 / M_PI);
 }
 
 real generate_saw(real wavePeriod)
@@ -187,7 +205,7 @@ real generate_saw(real wavePeriod)
 
 real generate_square(real wavePeriod)
 {
-  return (SDL_sin(wavePeriod) >= 0.0f ? 1.0f : -1.0f);
+  return (SIN_FUNC(wavePeriod) >= 0.0f ? 1.0f : -1.0f);
 }
 
 void DangoFM::Operator::PrecalculateSines()
@@ -198,7 +216,10 @@ void DangoFM::Operator::PrecalculateSines()
   size_t i = 0;
   for(real a = 0.0f; a < TAU && i < SineResolution; a += step)
   {
-    SinTable[i] = a;
+
+    SinTable[i] = SDL_sin(a);
     i++;
   }
 }
+
+#undef SIN_FUNC

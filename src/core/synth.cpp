@@ -12,14 +12,15 @@ void DangoFM::Synth::Init()
     channels[c].Reset();
   }
   InitDefaultInstruments();
+  Operator::PrecalculateSines();
 }
 
 void DangoFM::Synth::InitDefaultInstruments()
 {
-	Instrument default_instrument = CreateDefaultInstrument();
+  DefaultInstrument = CreateDefaultInstrument();
 	for (int c = 0; c < DANGO_CHANNEL_AMOUNT; c++)
 	{
-		channels[c].instrument = default_instrument;
+		channels[c].SetInstrument(&DefaultInstrument);
 	}
 }
 
@@ -31,7 +32,7 @@ void DangoFM::Synth::InitSongInstruments(Instrument* instruments, uint8 amount)
 DangoFM::Instrument DangoFM::Synth::CreateDefaultInstrument()
 {
   Instrument i;
-    Envelope defEnv = Envelope(0.9f, 0.9f, 0.3f, 0.0f, 0.9f);
+   Envelope defEnv = Envelope(0.9f, 0.9f, 0.3f, 0.0f, 0.9f);
   Operator defCarrier = Operator(Sin, 0.5f, 0, defEnv);
   Operator defMod = Operator(Sin, 0.0f, 0, defEnv);
   Instrument defaultInst = Instrument(defCarrier, defMod);
@@ -45,15 +46,19 @@ DangoFM::Instrument DangoFM::Synth::CreateDefaultInstrument()
 void DangoFM::Synth::GenerateAudio_V3(uint8 channelNumber, AudioBuffer buffer, uint16 sampleAmount)
 {
   SynthChannel& ch = channels[channelNumber];
-  Instrument& instrument = ch.instrument;
+  Instrument* instrument = ch.instrument;
+  if (instrument == nullptr)
+  {
+    return;
+  }
   for(int i = 0; i < ch.activeVoices; i++)
   {
     Voice& V = ch.voices[i];
-    instrument.TuneToNote(V.note);
-    Operator& Carrier = instrument.Carrier;
+    instrument->TuneToNote(V.note);
+    Operator& Carrier = instrument->Carrier;
     Envelope& C_Envelope = Carrier.GetVolumeEnvelope();
 
-    Operator& Modulator = instrument.Modulator;
+    Operator& Modulator = instrument->Modulator;
     real ModAmpl = Freq2Rad * (Modulator.GetLevel() * (float)modulationIndex) * Modulator.frequenzyHz;
     Envelope& M_Envelope = Modulator.GetVolumeEnvelope();
 
@@ -61,19 +66,25 @@ void DangoFM::Synth::GenerateAudio_V3(uint8 channelNumber, AudioBuffer buffer, u
     std::function<real(real)> M_func = Modulator.GetWaveFunction();
 
     real sample = 0.0f;
+    real modulationAmount = 0.0f;
     ch.peakValue = 0.0f;
 
     // NOTE: n is used as index to the buffer!
     for(SampleCount n = 0; n < sampleAmount; n++)
     {
       sample = V.volume * V.carrierState.level * C_func(V.carrierState.phase) * Carrier.GetLevel();
+      if (sample < -1.0f || sample > 1.0f || std::isinf(sample) || std::isnan(sample))
+      {
+        printf("Invalid sample %f\n", sample);
+      }
+
       if( SDL_fabsf(sample) > ch.peakValue)
       {
         ch.peakValue = SDL_fabsf(sample);
       }
-      buffer[n] = sample;
+      buffer[n] += sample;
 
-      real modulationAmount = V.modulatorState.level * M_func(V.modulatorState.phase) + V.modulatorState.feedback * Modulator.GetFeedBack();
+      modulationAmount = V.modulatorState.level * M_func(V.modulatorState.phase) + V.modulatorState.feedback * Modulator.GetFeedBack();
       V.modulatorState.feedback = modulationAmount;
 
       V.carrierState.phase += Carrier.phaseIncrement + modulationAmount * ModAmpl;
@@ -100,7 +111,13 @@ void DangoFM::Synth::GenerateAudio_V3(uint8 channelNumber, AudioBuffer buffer, u
 
 void DangoFM::Synth::UpdateOperatorState(DangoFM::OperatorState& state, DangoFM::Envelope& E)
 {
-  if (state.phase >= TAU)
+  // Modulation amount can be negative and that causes
+  // phase to be negative too
+  while (state.phase < 0.0f)
+  {
+    state.phase += TAU;
+  }
+  while (state.phase >= TAU)
   {
     state.phase -= TAU;
   }
@@ -403,7 +420,7 @@ void DangoFM::Synth::StopAllVoices()
   for (int c = 0; c < DANGO_CHANNEL_AMOUNT; c++)
   {
     SynthChannel& ch = channels[c];
-    for (int v = 0; v < ch.activeVoices; v++)
+    for (int v = 0; v < DANGO_VOICE_AMOUNT; v++)
     {
       ch.StopVoice(v);
     }

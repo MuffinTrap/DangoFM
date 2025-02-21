@@ -17,6 +17,7 @@ namespace DangoFM
 		void NoteOff(uint8 note);
 		void SetNoteRelative(int8 noteRelative, uint8 velocity);
 		void StopVoice(uint8 voice);
+		void SetInstrument(Instrument* instrument);
 		AudioBuffer GetWorkBuffer();
 
 		real volume = 1.0f;
@@ -29,7 +30,7 @@ namespace DangoFM
 
 		real peakValue = 0.0f;
 
-		Instrument instrument;
+		Instrument* instrument = nullptr;
 
 		AudioBuffer workBuffer = nullptr;
 	};

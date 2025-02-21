@@ -18,6 +18,7 @@ namespace DangoFM
 	public:
 		real increment;
 		real targetLevel;
+		real advanceSpeed; // Set from the operator
 	};
 
 	struct EnvelopeStatus
@@ -42,6 +43,8 @@ namespace DangoFM
 		Envelope();
 		Envelope(real attackRate, real decay1Rate, real sustainLevel, real decay2Rate, real releaseRate);
 		EnvelopeSlope GetSlopeAt(EnvelopeState state);
+		real advanceSpeedOffset = 0.0f;
+		real advanceSpeed = 1.0f;
 
 
 

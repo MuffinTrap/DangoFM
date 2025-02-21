@@ -2,8 +2,6 @@
 #include "editor.h"
 #include "../core/synth_definitions.h"
 
-static real callbackAudioLevel = 0;
-
 DangoFM::Editor::Editor()
 {
 
@@ -53,27 +51,21 @@ int DangoFM::Editor::Init()
 	// Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL2_Init();
-	window_open = true;
-
 
     synthesizer.Init();
     driver.Init(192, 129, &synthesizer);
     InitAudio();
-    SetAudioPaused(true);
-
-    callbackAudioLevel = masterLevel;
 
     // Init windows
+    mainW.Init(audio_device);
     synthW.Init();
     channelsW.Init();
+
+    mainW.SetAudioPaused(false);
 
     return 0;
 }
 
-void DangoFM::Editor::SetAudioPaused(bool paused)
-{
-  SDL_PauseAudioDevice(audio_device, paused ? 1 : 0);
-}
 
 
 void audio_callback(void *userData, uint8 *buffer, int bufferLengthInBytes) {
@@ -81,7 +73,7 @@ void audio_callback(void *userData, uint8 *buffer, int bufferLengthInBytes) {
 
   SDL_memset(buffer, 0, bufferLengthInBytes);
   int16* sampleBuffer = (int16*)buffer;
-  driver->DriveSynth(DANGO_SAMPLES_PER_CALLBACK, callbackAudioLevel, sampleBuffer);
+  driver->Play(DANGO_SAMPLES_PER_CALLBACK, 1.0f, sampleBuffer);
 }
 
 void DangoFM::Editor::InitAudio()
@@ -174,28 +166,7 @@ void DangoFM::Editor::Run()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-
-		// 3. Show another simple window.
-        if (window_open)
-        {
-            ImGui::Begin("Another Window", &window_open);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                window_open = false;
-            ImGui::End();
-
-        }
-        ImGui::Begin("System", NULL);
-            if (ImGui::Checkbox("Sound On", &soundOn))
-            {
-              SetAudioPaused(!soundOn);
-            }
-            if (ImGui::SliderFloat("Master volume", &masterLevel, 0.0f, 1.0f))
-            {
-              callbackAudioLevel = masterLevel;
-            }
-        ImGui::End();
-
+        mainW.Draw(driver);
         if (synthW.isOpen)
         {
           synthW.Draw(synthesizer, driver);
@@ -225,7 +196,7 @@ void DangoFM::Editor::Quit()
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
-    SetAudioPaused(true);
+    SDL_PauseAudioDevice(audio_device, true);
     SDL_CloseAudio();
 
     SDL_GL_DeleteContext(gl_context);

@@ -8,18 +8,20 @@ namespace DangoFM
 	{
 		real levelValue = 1.0f;
 		real feedbackValue = 1.0f;
+		float envelopeSpeedOffset = 0.0f;
 		int waveFormValue = 0;
+		int freqMultiplierValue = 1;
 	};
 	class InstrumentWindow
 	{
 	public:
 		void Init();
-		void Draw(Synth& synth, Instrument& instrument, bool instrumentChanged = false);
+		void Draw(Synth& synth, Instrument* instrument, bool instrumentChanged = false);
 		bool DrawOperator(OperatorRole role, std::string name, Operator& O);
 	private:
 		std::string SemitonesToIntervalDescription(int16 semitones);
 		void UpdateGraph(real* graph, Envelope& envelope);
-		void UpdatePreview(Synth& synth, Instrument& instrument);
+		void UpdatePreview(Synth& synth, Instrument* instrument);
 		std::string intervalTexts[2];
 		static const size_t graphSize = DANGO_SAMPLES_PER_SECOND/8;
 		real carrierGraphPoints[graphSize];
@@ -27,6 +29,8 @@ namespace DangoFM
 		static const size_t previewSize = DANGO_SAMPLES_PER_CALLBACK;
 		real previewGraphPoints[previewSize];
 		bool firstUpdate = true;
+
+		// Settings sent to instrument
 
 		OperatorSettings operators[2];
 	};

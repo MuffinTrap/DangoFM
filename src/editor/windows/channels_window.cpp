@@ -9,13 +9,19 @@ void DangoFM::ChannelsWindow::Draw(DangoFM::Synth& synth, DangoFM::Driver& drive
 {
 	ImGui::Begin("Channels");
 	ImGui::Text("Channel");
-	SynthChannel* ch0 = synth.GetChannel(0);
-	DrawChannel(ch0);
+	for (int c = 0; c < DANGO_CHANNEL_AMOUNT; c++)
+	{
+		SynthChannel* ch0 = synth.GetChannel(c);
+		DangoFM::DataChannel& d0 = driver.GetDataChannel(c);
+		ImGui::PushID(c);
+		DrawChannel(ch0, d0);
+		ImGui::PopID();
+	}
 
 	ImGui::End();
 }
 
-void DangoFM::ChannelsWindow::DrawChannel(DangoFM::SynthChannel* ch)
+void DangoFM::ChannelsWindow::DrawChannel(DangoFM::SynthChannel* ch, DangoFM::DataChannel& dchannel)
 {
 	ImVec4 grey = ImVec4(0.5f,0,0.5f,1);
 	for (int v = 0; v < ch->activeVoices; v++)
@@ -44,6 +50,7 @@ void DangoFM::ChannelsWindow::DrawChannel(DangoFM::SynthChannel* ch)
 	ImGui::ProgressBar(ch->peakValue, ImVec2(0.0f, 0.0f));
 	ImGui::SameLine();
 	ImGui::Text("%.4f", ch->peakValue);
+	ImGui::Text("Tick Clock: %d < %d Stamps: %zu/%d Events: %zu/%d", dchannel.TickClock, dchannel.NextEventTimeTicks, dchannel.stampIndex, dchannel.stampsSize, dchannel.eventIndex, dchannel.eventsSize);
 }
 
 

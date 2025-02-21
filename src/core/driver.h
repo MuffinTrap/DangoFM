@@ -4,9 +4,17 @@
 #include "type_definitions.h"
 #include "datachannel.h"
 #include "synth.h"
+#include "song.h"
 
 namespace DangoFM
 {
+
+	enum DriverMode
+	{
+		PlayHeaderSong,
+		PlayLoadedSong,
+		PlaySynth
+	};
 
 class Driver
 {
@@ -14,18 +22,38 @@ public:
 	void Init(int ticksPerBeat, int bpm, Synth* synth, uint8 channelAmount = DANGO_CHANNEL_AMOUNT);
 	void SwapBuffers();
 
-	// In PLAY mode
-	void SetSongData(uint8* songData, uint8 channelsInSong);
-	bool AdvanceSong(int samplesToGenerate, float volume);
+	void Play(int samplesToGenerate, float volume, SampleBuffer outBuffer);
 
-	// In Editor mode can either play song
-	// or free play
-	void SetChannelAmount(uint8 channelAmount);
+	// From Header
+	void SetSongData(uint8* songData, uint8 channelsInSong);
+	bool AdvanceSong(int samplesToGenerate, float volume, SampleBuffer outBuffer);
+
+	// From file
+	void LoadSong(Song* song);
+	bool PlaySong(int samplesToGenerate, float volume, SampleBuffer outBuffer);
+	void ResetSongPlayback();
+
+	// From keyboard
 	void DriveSynth(int samplesToGenerate, float volume, SampleBuffer outBuffer);
 
+	void SetChannelAmount(uint8 channelAmount);
+	void SetMasterVolume(real volume);
+
+	bool HasLoadedSong();
+
+	DataChannel& GetDataChannel(int i);
+
+	DriverMode activeMode = PlaySynth;
 	AudioBuffer GetWorkBuffer();
 
+	uint32 GetTicksClock();
+	real GetSecondsClock();
+	uint32 GetTicksTarget();
+	Song* GetLoadedSong();
+	Synth* GetSynth();
+
 private:
+	void ResetClock();
 	void ClearBuffer(AudioBuffer buffer);
 	void PrepareToGenerate();
 	void ResetChannel();
@@ -35,14 +63,10 @@ private:
 	void AdvanceChannel(DataChannel& channel);
 	bool AdvanceTimeStampsAndEvents(DataChannel& channel);
 
-	// Data reading TODO: move to own?
-	uint32 ReadVariableLength(uint8* dataPointer, int& byteIndex);
-
 	// Data functions
 	void FillFrontBufferWithAudio(float volume);
 	void GetFrontBuffer(SampleBuffer outBuffer);
 	void MergeToWorkBuffer(AudioBuffer channelBuffer);
-
 
 	// Time functions
 	float ticksToSeconds(int ticks);
@@ -71,6 +95,9 @@ private:
   // Playing music
   Synth* synth = nullptr;
 
+  // Playing Song
+  Song* loadedSong = nullptr;
+
 
   // Advancing channels
   DataChannel* channelsArray = nullptr;
@@ -86,6 +113,7 @@ private:
   AudioBuffer workBuffer = nullptr;
 
   // Song data
-  uint8* songData = nullptr;
+
+  real masterVolume = 1.0f;
 };
 }

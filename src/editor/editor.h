@@ -12,6 +12,7 @@
 #include "windows/synth_window.h"
 #include "windows/keyboard_window.h"
 #include "windows/channels_window.h"
+#include "windows/main_window.h"
 #include "windows/instrument_window.h"
 
 namespace DangoFM
@@ -27,17 +28,12 @@ public:
 
 private:
 	void InitAudio();
-	void SetAudioPaused(bool paused);
 
-	// Different windows and controls
-	bool soundOn = false;
-	float masterLevel = 1.0f;
 
 	SDL_Window* window;
 	ImGuiIO io;
 	SDL_GLContext gl_context;
 	SDL_AudioDeviceID audio_device;
-	bool window_open;
 
 	Synth synthesizer;
 	Driver driver;
@@ -48,5 +44,6 @@ private:
 	KeyboardWindow keyW;
 	ChannelsWindow channelsW;
 	InstrumentWindow instrumentW;
+	MainWindow mainW;
 };
 }

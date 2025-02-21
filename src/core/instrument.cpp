@@ -20,3 +20,4 @@ void DangoFM::Instrument::TuneToNote(uint8 note)
   Modulator.TuneToNote(note);
   Carrier.TuneToNote(note);
 }
+

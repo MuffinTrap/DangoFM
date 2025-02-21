@@ -17,8 +17,13 @@
 	0.01?
 / add Feedback to sin() output?  **SEEMS TO BE CORRECT**
 
-- Make operator levels exponential
+- Make operator levels exponential : should be logarithmic
 - Make feedback level exponential
+- ADSR should be logarithmic too
+
+- Figure out why sample data is sometimes infinite or NaN
+
+
 
 ## Adjust with video
 Modulation index: around 10?

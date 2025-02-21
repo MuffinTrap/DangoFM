@@ -12,7 +12,7 @@ namespace DangoFM
 		void Draw(Synth& synth, Driver& driver);
 		bool isOpen = true;
 	private :
-		void DrawChannel(SynthChannel* ch);
+		void DrawChannel(SynthChannel* ch, DataChannel& dch);
 	};
 }
 

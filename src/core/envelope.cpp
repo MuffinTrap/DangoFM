@@ -26,11 +26,20 @@ DangoFM::EnvelopeSlope DangoFM::Envelope::GetSlopeAt(DangoFM::EnvelopeState stat
 	EnvelopeSlope s;
 	s.increment = 0.0f;
 	s.targetLevel = 0.0f;
+	s.advanceSpeed = advanceSpeed;
 	if (state != EnvelopeState::End)
 	{
 
 		real time = (1.0f-rates[state]) * DANGO_SAMPLES_PER_SECOND;
-		s.increment = 1.0f/time;
+		// Possible division by zero!
+		if (time == 0)
+		{
+			s.increment = 1.0f;
+		}
+		else
+		{
+			s.increment = 1.0f/time;
+		}
 		switch(state)
 		{
 			case Attack: s.targetLevel = 1.0f; break;

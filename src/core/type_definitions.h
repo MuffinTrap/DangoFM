@@ -14,10 +14,19 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 
 typedef float real;
+typedef real InternalSample;
 
-typedef real* AudioBuffer;
+typedef InternalSample* AudioBuffer;
+#define InternalSampleZero 0.0f
+
 typedef int16* SampleBuffer;
 typedef uint32 SampleCount;
+typedef uint32 TickCount;
+typedef size_t byteindex;
+typedef int code;
+typedef uint32 amount;
+
+typedef uint8 MidiEventType;
 
 
 enum Interval : uint8

@@ -5,19 +5,22 @@ namespace DangoFM
 	class DataChannel
 	{
 	public:
-		int index;
-		int stampsStart;
-		int eventsStart;
-		int stampsSize;
-		int eventsSize;
-		int stampsEnd;
-		int eventsEnd;
-		uint32 TickClock;
-		uint32 NextEventTimeTicks;
-		uint32 SamplesDone;
+		int index = 0;
+		uint8* stampsStart = nullptr;
+		uint8* eventsStart = nullptr;
+		int stampsSize = 0;
+		int eventsSize = 0 ;
+		byteindex stampIndex = 0;
+		byteindex eventIndex = 0;
+		uint32 TickClock = 0;
+		uint32 NextEventTimeTicks = 0;
+		uint32 SamplesDone = 0;
 
-		int stampIndex;
-		int eventIndex;
+		DataChannel()
+		{
+
+		}
+
 
 		void ResetClock()
 		{
@@ -30,14 +33,12 @@ namespace DangoFM
 			this->index = index;
 		}
 
-		void SetByteIndices(int stampStart, int stampSize, int eventStart, int eventSize)
+		void SetByteIndices(uint8* stampStart, int stampSize, uint8* eventStart, int eventSize)
 		{
 			this->stampsStart = stampStart;
 			this->eventsStart = eventStart;
 			this->stampsSize = stampSize;
 			this->eventsSize = eventSize;
-			stampsEnd = stampsStart + stampSize;
-			eventsEnd = eventStart + eventSize;
 			stampIndex = 0;
 			eventIndex = 0;
 		}

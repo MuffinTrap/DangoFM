@@ -34,7 +34,7 @@ void DangoFM::SynthChannel::NoteOn(uint8 note, uint8 velocity)
 {
 	if (activeVoices < DANGO_VOICE_AMOUNT)
 	{
-		voices[activeVoices].On(note,(float)velocity/127.0f, instrument.Carrier.GetVolumeEnvelope(), instrument.Modulator.GetVolumeEnvelope());
+		voices[activeVoices].On(note,(float)velocity/127.0f, instrument->Carrier.GetVolumeEnvelope(), instrument->Modulator.GetVolumeEnvelope());
 		activeVoices++;
 	}
 }
@@ -66,6 +66,12 @@ void DangoFM::SynthChannel::StopVoice(uint8 voice)
 	// Decrease amount of active voices
 	activeVoices--;
 }
+
+void DangoFM::SynthChannel::SetInstrument(DangoFM::Instrument* instrument)
+{
+	this->instrument = instrument;
+}
+
 
 
 

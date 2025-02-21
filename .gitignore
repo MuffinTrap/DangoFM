@@ -33,5 +33,9 @@
 
 .kdev4/
 *.kdev4
+*.kate-swp
 
 build/
+
+*.mid
+midis/

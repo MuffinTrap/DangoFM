@@ -44,7 +44,11 @@ DangoFM::OperatorState::OperatorState()
 // returns true on state change
 bool DangoFM::OperatorState::Advance(bool debug)
 {
-  level += slope.increment;
+  real lb = level;
+  level += slope.increment * slope.advanceSpeed;
+  real la = level;
+
+  //printf("%.2f -> %.2f s(%.2f)\n", lb, la, slope.advanceSpeed);
   bool reachedTarget = false;
   if (state == Attack)
   {

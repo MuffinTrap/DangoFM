@@ -42,6 +42,7 @@ public:
 private:
 	inline void UpdateOperatorState(OperatorState& state, Envelope& E);
 	inline real GetEnvelopeValue_V2(EnvelopeStatus& E, Voice& V);
+	Instrument DefaultInstrument;
 };
 
 }

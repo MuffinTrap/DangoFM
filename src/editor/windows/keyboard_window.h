@@ -35,6 +35,7 @@ namespace DangoFM
 
 		int octave = 2;
 		uint8 baseNote = 24;
+		int velocity = 68;
 		PianoKey keys[12];
 		void HandleKey(std::string text, PianoKey& key, Synth& synth);
 		ImGuiKey* pianoKeyBinds = nullptr;

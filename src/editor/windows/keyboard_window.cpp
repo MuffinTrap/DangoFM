@@ -32,7 +32,7 @@ void DangoFM::KeyboardWindow::HandleKey(std::string text, DangoFM::PianoKey& key
 	KeyResult r = key.Key(text);
 	if (r == KeyResult::Pressed)
 	{
-		synth.NoteOn(0, baseNote + key.semitoneOffset, 68);
+		synth.NoteOn(0, baseNote + key.semitoneOffset, velocity);
 	}
 	else if ( r == KeyResult::Released)
 	{
@@ -69,10 +69,11 @@ void DangoFM::KeyboardWindow::Draw(DangoFM::Synth& synth)
 	ImColor blue = ImColor::HSV(146.0f/255.0f, 249.0f/255.0f, 196.0f/255.0f);
 	ImColor white = ImColor::HSV(246.0f/255.0f, 5.0f/255.0f, 216.0f/255.0f);
 
-	if (ImGui::SliderInt("Octave", &octave, 1, 7, "Octave: %d"))
+	if (ImGui::SliderInt("Octave", &octave, 1, 7, "%d"))
 	{
 		baseNote = octave * 12;
 	}
+	ImGui::SliderInt("Velocity", &velocity, 1, 127, "%d");
 
 	// Black Keys
 	ImGui::PushID(0);
